@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "bundler-js-vite-esbuild-tsup-2026-08",
+  "slug": "vite-vs-esbuild-vs-tsup-library-build",
+  "category": "Bundlers",
+  "title": "Vite vs esbuild vs tsup",
+  "deck": "Cold production builds of a TypeScript library — ESM, minified, no declarations.",
+  "unit": "ms",
+  "lowerIsBetter": true,
+  "verdict": {
+    "winnerId": "esbuild",
+    "headline": "esbuild finished in 12 ms; the nearest contender took 185 ms",
+    "summary": "esbuild built zod in 12.3 ms at the median. tsup took 184.8 ms; Vite took 232.7 ms. esbuild and tsup produced identical 59 KB bundles; Vite's Rollup-based pipeline emitted 86 KB."
+  },
+  "corpus": {
+    "name": "zod 3.24.4 library source",
+    "source": "github.com/colinhacks/zod@v3.24.4/src",
+    "files": 13,
+    "lines": 6645,
+    "bytes": 192935
+  },
+  "limitations": [
+    "Cold builds only. No watch mode, incremental rebuilds, or hot module replacement timing.",
+    "One corpus: a zero-dependency TypeScript library (zod 3.24.4, 13 files, ~6,600 lines). Application builds with many dependencies, code-splitting, or CSS processing may produce different rankings.",
+    "Build speed says nothing about dev-server experience, plugin ecosystems, or output correctness beyond \"it built.\"",
+    "All three tools use esbuild's minifier. Vite delegates bundling to Rollup, then minification to esbuild; tsup wraps esbuild for both steps. The minification overhead is the same across candidates.",
+    "Declaration file generation (.d.ts) is disabled for all candidates. Enabling tsup's dts option invokes the TypeScript compiler and would add significant time.",
+    "Vite's larger output (86 KB vs. 59 KB) reflects Rollup's bundling strategy, not a minification difference. Both outputs are functionally equivalent."
+  ],
+  "runs": [
+    "runs/2026-08-30-m2max.json"
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-30-m2max",
+  "label": "M2 Max (local)",
+  "publishedAt": "2026-08-30",
+  "environment": {
+    "machine": "MacBook Pro",
+    "chip": "Apple M2 Max",
+    "cores": "12 CPU cores",
+    "memory": "96 GB",
+    "os": "macOS 26.6.2",
+    "arch": "arm64",
+    "runtime": "Bun 1.4.0"
+  },
+  "protocol": {
+    "warmups": 3,
+    "runs": 20,
+    "processModel": "A new CLI process for every measured pass, output directory cleared between passes",
+    "cacheState": "Warm filesystem cache after 3 unmeasured passes per candidate",
+    "output": "Bundled output emitted to a dedicated directory per tool"
+  },
+  "candidates": [
+    {
+      "id": "esbuild",
+      "name": "esbuild",
+      "version": "0.25.5",
+      "statistics": {
+        "medianMs": 12.3,
+        "meanMs": 12.3,
+        "minMs": 12,
+        "maxMs": 12.6
+      },
+      "samplesMs": [
+        12.3,
+        12.5,
+        12.1,
+        12.3,
+        12.6,
+        12.1,
+        12.4,
+        12.3,
+        12.2,
+        12.3,
+        12.2,
+        12.5,
+        12.3,
+        12.3,
+        12.3,
+        12.5,
+        12.4,
+        12.2,
+        12,
+        12.1
+      ],
+      "logo": "/logos/esbuild.svg",
+      "homepage": "https://esbuild.github.io",
+      "color": "#FFCF00"
+    },
+    {
+      "id": "vite",
+      "name": "Vite",
+      "version": "6.3.5",
+      "statistics": {
+        "medianMs": 232.7,
+        "meanMs": 234.6,
+        "minMs": 229.5,
+        "maxMs": 248.8
+      },
+      "samplesMs": [
+        229.5,
+        231.3,
+        229.6,
+        236.8,
+        229.7,
+        232.4,
+        240.9,
+        248.8,
+        236.7,
+        239.8,
+        239.2,
+        232.7,
+        234.9,
+        236.3,
+        232.3,
+        232,
+        232.3,
+        234.4,
+        232.7,
+        230.7
+      ],
+      "logo": "/logos/vite.svg",
+      "homepage": "https://vite.dev",
+      "color": "#646CFF"
+    },
+    {
+      "id": "tsup",
+      "name": "tsup",
+      "version": "8.5.0",
+      "statistics": {
+        "medianMs": 184.8,
+        "meanMs": 185.3,
+        "minMs": 183,
+        "maxMs": 189
+      },
+      "samplesMs": [
+        184,
+        183.1,
+        189,
+        186.2,
+        186,
+        184.2,
+        184.2,
+        188.5,
+        184.8,
+        186.5,
+        183.7,
+        184.8,
+        184.7,
+        186.3,
+        184,
+        186.2,
+        185.5,
+        184.1,
+        186.4,
+        183
+      ],
+      "logo": "/logos/tsup.svg",
+      "homepage": "https://tsup.egoist.dev",
+      "color": "#EE6A00"
+    }
+  ]
+}
