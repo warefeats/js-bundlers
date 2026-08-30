@@ -4,13 +4,15 @@ The reproducible local benchmark runner behind the [warefeats.com "Vite vs esbui
 
 It downloads zod's TypeScript source from a pinned GitHub tag (sha256-verified), then runs a cold production build with each bundler against the same corpus, collecting per-pass timing and summary statistics. Results live in this repo as `benchmark.json` (editorial metadata) plus one file per run under `runs/`.
 
+"Cold" means no incremental build state and a fresh CLI process for every measured pass. The filesystem cache is warm after unmeasured warmup passes.
+
 ## Corpus
 
-zod 3.24.4 library source, vendored from [github.com/colinhacks/zod@v3.24.4](https://github.com/colinhacks/zod/tree/v3.24.4/src). 13 TypeScript files, 6,645 lines, 193 KB. Zero dependencies. The npm package ships only compiled JavaScript, so the runner downloads the source tarball from GitHub and verifies its sha256 hash (`d8f858db31bc9debc12ac278db107c67a726eda04e4d71250704d2c7d4c613fe`) before extraction.
+zod 4.5.4 library source, vendored from [github.com/colinhacks/zod@v4.5.4](https://github.com/colinhacks/zod/tree/v4.5.4/packages/zod/src). 124 TypeScript files, 36,620 lines, 1,298,414 bytes. Zero dependencies. The npm package ships only compiled JavaScript, so the runner downloads the source tarball from GitHub and verifies its sha256 hash (`3b843d6840988462fb89a8d714e286f2fc4f998a89c6468ec948c869ab417548`) before extraction. The tarball is a monorepo; the runner extracts `packages/zod/src/` and strips test/benchmark directories.
 
 ## Configuration equivalence
 
-Every candidate builds the same entry point (`src/index.ts`) with equivalent settings. Declaration files (.d.ts) are disabled for all — tsup generates them by default when configured with `dts: true`, which invokes the TypeScript compiler; disabling it keeps the comparison to bundling only.
+Every candidate builds the same entry point (`src/index.ts`) with equivalent settings. Declaration files (.d.ts) are disabled for all — tsup's `dts` option is off by default; enabling it invokes the TypeScript compiler and is outside the scope of this comparison.
 
 | Setting | esbuild | Vite | tsup |
 |---|---|---|---|
@@ -22,9 +24,23 @@ Every candidate builds the same entry point (`src/index.ts`) with equivalent set
 | Sourcemap | off (default) | `sourcemap: false` | off (default) |
 | DTS | N/A | N/A | off (default) |
 
-Minification is ON because production builds are the real use case. All three tools delegate minification to esbuild's minifier — the difference is in the bundling and transformation pipeline: esbuild bundles natively in Go, Vite delegates to Rollup (JavaScript), and tsup wraps esbuild.
+Minification is ON because production builds are the real use case. All three tools use esbuild's minifier, but not identically: esbuild bundles and minifies natively in Go; Vite delegates bundling to Rolldown (Rust), then runs esbuild for minification — but for ES-format library builds, Vite deliberately disables whitespace minification to preserve `/* @__PURE__ */` annotations for downstream tree-shaking; tsup wraps esbuild for both steps.
 
-Config files for Vite (`configs/vite.config.ts`) and tsup (`configs/tsup.config.ts`) are in this repo for review. At runtime, the runner writes a simplified vite config to the scratch directory; esbuild and tsup use CLI flags only.
+The Vite config written at runtime:
+
+```js
+export default {
+  build: {
+    lib: { entry: "src/index.ts", formats: ["es"], fileName: "index" },
+    target: "es2022",
+    minify: "esbuild",
+    sourcemap: false,
+    outDir: "dist/vite",
+  },
+};
+```
+
+esbuild and tsup use CLI flags only (see the configuration table above).
 
 ## Requirements
 
