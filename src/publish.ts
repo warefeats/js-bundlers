@@ -77,7 +77,7 @@ export interface RunFile {
   }>;
 }
 
-const CANDIDATE_BRANDING: Record<string, { logo: string; homepage: string; color: string }> = {
+const CANDIDATE_BRANDING: Record<string, { logo?: string; homepage: string; color: string }> = {
   esbuild: { logo: "/logos/esbuild.svg", homepage: "https://esbuild.github.io", color: "#FFCF00" },
   vite: { logo: "/logos/vite.svg", homepage: "https://vite.dev", color: "#646CFF" },
   tsup: { homepage: "https://tsup.egoist.dev", color: "#EE6A00" },
