@@ -1,0 +1,21 @@
+{
+  "name": "js-bundlers",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "bun@1.4.0",
+  "scripts": {
+    "benchmark": "bun run src/index.ts",
+    "smoke": "bun run src/index.ts --quick",
+    "publish": "bun run src/publish.ts",
+    "check": "tsc --pretty false",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.0",
+    "esbuild": "0.25.5",
+    "tsup": "8.5.0",
+    "typescript": "5.9.2",
+    "vite": "6.3.5"
+  }
+}

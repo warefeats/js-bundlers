@@ -1,0 +1,13 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    uses: warefeats/workflows/.github/workflows/bun-verify.yml@main
+    with:
+      smoke-command: bun run smoke -- --output=/tmp/js-bundlers-smoke.json
