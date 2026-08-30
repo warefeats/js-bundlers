@@ -13,9 +13,9 @@
   },
   "devDependencies": {
     "@types/bun": "1.4.0",
-    "esbuild": "0.25.5",
-    "tsup": "8.5.0",
+    "esbuild": "0.28.2",
+    "tsup": "8.5.1",
     "typescript": "5.9.2",
-    "vite": "6.3.5"
+    "vite": "8.2.2"
   }
 }

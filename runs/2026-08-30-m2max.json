@@ -10,7 +10,8 @@
     "memory": "96 GB",
     "os": "macOS 26.6.2",
     "arch": "arm64",
-    "runtime": "Bun 1.4.0"
+    "runtime": "Node 24.19.0 (Vite, tsup); esbuild native binary; Bun 1.4.0 harness",
+    "node": "24.19.0"
   },
   "protocol": {
     "warmups": 3,
@@ -23,110 +24,131 @@
     {
       "id": "esbuild",
       "name": "esbuild",
-      "version": "0.25.5",
+      "version": "0.28.2",
       "statistics": {
-        "medianMs": 12.3,
-        "meanMs": 12.3,
-        "minMs": 12,
-        "maxMs": 12.6
+        "medianMs": 15.9,
+        "meanMs": 16,
+        "minMs": 14.7,
+        "maxMs": 17.3
       },
       "samplesMs": [
-        12.3,
-        12.5,
-        12.1,
-        12.3,
-        12.6,
-        12.1,
-        12.4,
-        12.3,
-        12.2,
-        12.3,
-        12.2,
-        12.5,
-        12.3,
-        12.3,
-        12.3,
-        12.5,
-        12.4,
-        12.2,
-        12,
-        12.1
+        16.8,
+        15.9,
+        15.7,
+        15,
+        16.5,
+        15.6,
+        16.4,
+        17.3,
+        15.9,
+        16.7,
+        15.6,
+        16.2,
+        15.4,
+        17.1,
+        16.2,
+        16.5,
+        15.3,
+        15.5,
+        14.9,
+        14.7
       ],
       "logo": "/logos/esbuild.svg",
       "homepage": "https://esbuild.github.io",
-      "color": "#FFCF00"
+      "color": "#FFCF00",
+      "metrics": {
+        "outputBytes": {
+          "value": 436156,
+          "unit": "bytes",
+          "label": "Output size"
+        }
+      }
     },
     {
       "id": "vite",
       "name": "Vite",
-      "version": "6.3.5",
+      "version": "8.2.2",
       "statistics": {
-        "medianMs": 232.7,
-        "meanMs": 234.6,
-        "minMs": 229.5,
-        "maxMs": 248.8
+        "medianMs": 170.4,
+        "meanMs": 170.8,
+        "minMs": 161.8,
+        "maxMs": 184.9
       },
       "samplesMs": [
-        229.5,
-        231.3,
-        229.6,
-        236.8,
-        229.7,
-        232.4,
-        240.9,
-        248.8,
-        236.7,
-        239.8,
-        239.2,
-        232.7,
-        234.9,
-        236.3,
-        232.3,
-        232,
-        232.3,
-        234.4,
-        232.7,
-        230.7
+        163.6,
+        161.8,
+        169.1,
+        168.5,
+        171.9,
+        175.2,
+        170.7,
+        171.7,
+        170.8,
+        184.9,
+        175.8,
+        172.7,
+        171.8,
+        169.3,
+        173.6,
+        169.9,
+        167.9,
+        167.8,
+        169.7,
+        170.1
       ],
       "logo": "/logos/vite.svg",
       "homepage": "https://vite.dev",
-      "color": "#646CFF"
+      "color": "#646CFF",
+      "metrics": {
+        "outputBytes": {
+          "value": 493218,
+          "unit": "bytes",
+          "label": "Output size"
+        }
+      }
     },
     {
       "id": "tsup",
       "name": "tsup",
-      "version": "8.5.0",
+      "version": "8.5.1",
       "statistics": {
-        "medianMs": 184.8,
-        "meanMs": 185.3,
-        "minMs": 183,
-        "maxMs": 189
+        "medianMs": 203.6,
+        "meanMs": 203.8,
+        "minMs": 200.4,
+        "maxMs": 206.7
       },
       "samplesMs": [
-        184,
-        183.1,
-        189,
-        186.2,
-        186,
-        184.2,
-        184.2,
-        188.5,
-        184.8,
-        186.5,
-        183.7,
-        184.8,
-        184.7,
-        186.3,
-        184,
-        186.2,
-        185.5,
-        184.1,
-        186.4,
-        183
+        203.4,
+        200.4,
+        203.8,
+        202.6,
+        203.2,
+        202.8,
+        203,
+        206.3,
+        205.3,
+        204.5,
+        204.2,
+        202.7,
+        203.8,
+        206.7,
+        203.4,
+        202.9,
+        202.9,
+        204.1,
+        205.3,
+        204.2
       ],
       "logo": "/logos/tsup.svg",
       "homepage": "https://tsup.egoist.dev",
-      "color": "#EE6A00"
+      "color": "#EE6A00",
+      "metrics": {
+        "outputBytes": {
+          "value": 436156,
+          "unit": "bytes",
+          "label": "Output size"
+        }
+      }
     }
   ]
 }
