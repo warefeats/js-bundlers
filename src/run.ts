@@ -1,4 +1,4 @@
-import { cp, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { arch, cpus, freemem, platform, release, tmpdir, totalmem } from "node:os";
@@ -6,8 +6,8 @@ import { dirname, join, resolve } from "node:path";
 import { summarize, relativeSpeedup } from "./stats";
 import type { RunnerOptions } from "./options";
 
-const ZOD_VERSION = "3.24.4";
-const ZOD_TARBALL_SHA256 = "d8f858db31bc9debc12ac278db107c67a726eda04e4d71250704d2c7d4c613fe";
+const ZOD_VERSION = "4.5.4";
+const ZOD_TARBALL_SHA256 = "3b843d6840988462fb89a8d714e286f2fc4f998a89c6468ec948c869ab417548";
 
 const VITE_CONFIG = `export default {
   build: {
@@ -40,11 +40,20 @@ interface CandidateResult {
   outputBytes: number;
 }
 
-async function downloadCorpus(cacheDir: string): Promise<void> {
+const CACHE_MARKER = ".warefeats-verified";
+
+async function isCacheValid(cacheDir: string): Promise<boolean> {
   try {
     await stat(join(cacheDir, "src", "index.ts"));
-    return;
-  } catch { /* needs download */ }
+    const marker = await readFile(join(cacheDir, CACHE_MARKER), "utf8");
+    return marker.trim() === ZOD_TARBALL_SHA256;
+  } catch {
+    return false;
+  }
+}
+
+async function downloadCorpus(cacheDir: string): Promise<void> {
+  if (await isCacheValid(cacheDir)) return;
 
   process.stderr.write(`Downloading zod v${ZOD_VERSION} source\n`);
   const url = `https://github.com/colinhacks/zod/archive/refs/tags/v${ZOD_VERSION}.tar.gz`;
@@ -57,25 +66,39 @@ async function downloadCorpus(cacheDir: string): Promise<void> {
     throw new Error(`SHA256 mismatch: expected ${ZOD_TARBALL_SHA256}, got ${hash}`);
   }
 
-  await mkdir(cacheDir, { recursive: true });
-  const tarball = join(cacheDir, "zod.tar.gz");
+  const staging = `${cacheDir}.staging-${process.pid}`;
+  await rm(staging, { recursive: true, force: true });
+  await mkdir(staging, { recursive: true });
+  const tarball = join(staging, "zod.tar.gz");
   await writeFile(tarball, buffer);
 
   const proc = Bun.spawnSync({
-    cmd: ["tar", "xzf", tarball, "--strip-components=1", `zod-${ZOD_VERSION}/src/`],
-    cwd: cacheDir,
+    cmd: ["tar", "xzf", tarball, "--strip-components=3", `zod-${ZOD_VERSION}/packages/zod/src/`],
+    cwd: staging,
     stdout: "ignore",
     stderr: "pipe",
   });
   if (proc.exitCode !== 0) {
+    await rm(staging, { recursive: true, force: true });
     throw new Error(`Tar extraction failed: ${proc.stderr.toString()}`);
   }
 
   await rm(tarball);
 
-  const srcDir = join(cacheDir, "src");
+  const srcDir = join(staging, "src");
   await rm(join(srcDir, "__tests__"), { recursive: true, force: true });
   await rm(join(srcDir, "benchmarks"), { recursive: true, force: true });
+  const entries = await readdir(srcDir, { withFileTypes: true, recursive: true });
+  for (const entry of entries) {
+    if (entry.isDirectory() && (entry.name === "tests" || entry.name === "benchmarks")) {
+      await rm(join(entry.parentPath, entry.name), { recursive: true, force: true });
+    }
+  }
+
+  await writeFile(join(staging, CACHE_MARKER), `${hash}\n`);
+
+  await rm(cacheDir, { recursive: true, force: true });
+  await rename(staging, cacheDir);
 
   process.stderr.write(`Corpus cached: zod ${ZOD_VERSION}\n`);
 }
@@ -171,6 +194,12 @@ async function installedVersion(root: string, pkg: string): Promise<string> {
   return manifest.version;
 }
 
+export function detectNodeVersion(): string {
+  const proc = Bun.spawnSync({ cmd: ["node", "--version"], stdout: "pipe", stderr: "ignore" });
+  if (proc.exitCode !== 0) throw new Error("Failed to detect node version");
+  return proc.stdout.toString().trim().replace(/^v/, "");
+}
+
 export async function runBundleBenchmark(options: RunnerOptions): Promise<Record<string, unknown>> {
   const packageRoot = resolve(import.meta.dir, "..");
 
@@ -186,6 +215,7 @@ export async function runBundleBenchmark(options: RunnerOptions): Promise<Record
 
     const corpus = await measureCorpus(join(scratch, "src"));
 
+    const nodeVersion = detectNodeVersion();
     const esbuildBin = resolve(packageRoot, "node_modules/.bin/esbuild");
     const viteBin = resolve(packageRoot, "node_modules/.bin/vite");
     const tsupBin = resolve(packageRoot, "node_modules/.bin/tsup");
@@ -258,6 +288,7 @@ export async function runBundleBenchmark(options: RunnerOptions): Promise<Record
         totalMemoryBytes: totalmem(),
         freeMemoryBytesAtStart: freemem(),
         bun: Bun.version,
+        node: nodeVersion,
       },
       protocol: {
         warmups: options.warmups,

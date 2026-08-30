@@ -6,7 +6,7 @@ const MOCK_RESULT: RunnerResult = {
   schemaVersion: 1,
   benchmark: "vite-vs-esbuild-vs-tsup-library-build",
   generatedAt: "2026-08-30T14:30:00.000Z",
-  corpus: { name: "zod 3.24.4 library source", source: "github.com/colinhacks/zod@v3.24.4/src", files: 13, lines: 6645, bytes: 192935 },
+  corpus: { name: "zod 4.5.4 library source", source: "github.com/colinhacks/zod@v4.5.4/src", files: 124, lines: 36620, bytes: 1298414 },
   environment: {
     cpu: "Apple M2 Max",
     logicalCores: 12,
@@ -16,45 +16,46 @@ const MOCK_RESULT: RunnerResult = {
     totalMemoryBytes: 103079215104,
     freeMemoryBytesAtStart: 50000000000,
     bun: "1.4.0",
+    node: "24.19.0",
   },
   protocol: { warmups: 3, runs: 20, processModel: "fresh process per pass, output directory cleared" },
   candidates: [
     {
       id: "esbuild",
       name: "esbuild",
-      version: "0.25.5",
+      version: "0.28.2",
       command: "esbuild src/index.ts --bundle ...",
       exitCodes: [0],
       statistics: { medianMs: 12.5, meanMs: 12.8, minMs: 11.2, maxMs: 14.1 },
       samplesMs: [12.5, 12.6],
-      outputBytes: 58000,
+      outputBytes: 436156,
     },
     {
       id: "vite",
       name: "Vite",
-      version: "6.3.5",
+      version: "8.2.2",
       command: "vite build ...",
       exitCodes: [0],
-      statistics: { medianMs: 450.0, meanMs: 455.0, minMs: 440.0, maxMs: 470.0 },
-      samplesMs: [450.0, 460.0],
-      outputBytes: 57000,
+      statistics: { medianMs: 170.0, meanMs: 172.0, minMs: 165.0, maxMs: 180.0 },
+      samplesMs: [170.0, 174.0],
+      outputBytes: 493218,
     },
     {
       id: "tsup",
       name: "tsup",
-      version: "8.5.0",
+      version: "8.5.1",
       command: "tsup src/index.ts ...",
       exitCodes: [0],
-      statistics: { medianMs: 180.0, meanMs: 185.0, minMs: 170.0, maxMs: 200.0 },
-      samplesMs: [180.0, 190.0],
-      outputBytes: 58000,
+      statistics: { medianMs: 200.0, meanMs: 205.0, minMs: 195.0, maxMs: 215.0 },
+      samplesMs: [200.0, 210.0],
+      outputBytes: 436156,
     },
   ],
-  speedup: 36,
+  speedup: 16,
 };
 
 const BENCHMARK_RUN_KEYS = ["schemaVersion", "id", "label", "publishedAt", "environment", "protocol", "candidates"];
-const ENVIRONMENT_KEYS = ["machine", "chip", "cores", "memory", "os", "arch", "runtime"];
+const ENVIRONMENT_KEYS = ["machine", "chip", "cores", "memory", "os", "arch", "runtime", "node"];
 const PROTOCOL_KEYS = ["warmups", "runs", "processModel", "cacheState", "output"];
 const STATISTICS_KEYS = ["medianMs", "meanMs", "minMs", "maxMs"];
 
@@ -75,7 +76,7 @@ describe("publish conversion", () => {
     expect(Object.keys(run).sort()).toEqual(BENCHMARK_RUN_KEYS.sort());
   });
 
-  test("environment has exactly seven keys", () => {
+  test("environment has the expected keys", () => {
     expect(Object.keys(run.environment).sort()).toEqual(ENVIRONMENT_KEYS.sort());
   });
 
@@ -109,7 +110,11 @@ describe("publish conversion", () => {
     expect(run.environment.memory).toBe("96 GB");
     expect(run.environment.os).toMatch(/^macOS /);
     expect(run.environment.arch).toBe("arm64");
-    expect(run.environment.runtime).toBe("Bun 1.4.0");
+    expect(run.environment.runtime).toBe("Node 24.19.0 (Vite, tsup); esbuild native binary; Bun 1.4.0 harness");
+  });
+
+  test("includes node version in environment", () => {
+    expect(run.environment.node).toBe("24.19.0");
   });
 
   test("enriches protocol with cache and output descriptions", () => {
@@ -124,6 +129,12 @@ describe("publish conversion", () => {
       expect(c).not.toHaveProperty("exitCodes");
       expect(c).not.toHaveProperty("outputBytes");
     }
+  });
+
+  test("carries outputBytes through as metrics", () => {
+    const esbuild = run.candidates.find((c) => c.id === "esbuild")!;
+    expect(esbuild.metrics).toBeDefined();
+    expect(esbuild.metrics!.outputBytes).toEqual({ value: 436156, unit: "bytes", label: "Output size" });
   });
 
   test("adds branding to known candidates", () => {
@@ -141,6 +152,16 @@ describe("publish conversion", () => {
   test("defaults machine to chip label when not provided", () => {
     const noMachine = convertToRun(MOCK_RESULT, {});
     expect(noMachine.environment.machine).toBe("M2 Max");
+  });
+
+  test("omits node key when runner does not provide it", () => {
+    const noNode: RunnerResult = {
+      ...MOCK_RESULT,
+      environment: { ...MOCK_RESULT.environment, node: undefined },
+    };
+    const run = convertToRun(noNode, { machine: "MacBook Pro" });
+    expect(run.environment).not.toHaveProperty("node");
+    expect(run.environment.runtime).toBe("esbuild native binary; Bun 1.4.0 harness");
   });
 });
 

@@ -10,6 +10,7 @@ interface RunnerEnvironment {
   totalMemoryBytes: number;
   freeMemoryBytesAtStart: number;
   bun: string;
+  node?: string;
 }
 
 interface RunnerCandidate {
@@ -54,6 +55,7 @@ export interface RunFile {
     os: string;
     arch: string;
     runtime: string;
+    node?: string;
   };
   protocol: {
     warmups: number;
@@ -71,6 +73,7 @@ export interface RunFile {
     logo?: string;
     homepage?: string;
     color?: string;
+    metrics?: Record<string, { value: number; unit: string; label?: string }>;
   }>;
 }
 
@@ -95,7 +98,14 @@ export function convertToRun(result: RunnerResult, options: PublishOptions): Run
   const runDate = result.generatedAt.slice(0, 10);
   const publishedAt = options.publishedAt ?? new Date().toISOString().slice(0, 10);
 
-  return {
+  const nodeVersion = env.node;
+  const runtimeParts: string[] = [];
+  if (nodeVersion) runtimeParts.push(`Node ${nodeVersion} (Vite, tsup)`);
+  runtimeParts.push("esbuild native binary");
+  runtimeParts.push(`Bun ${env.bun} harness`);
+  const runtime = runtimeParts.join("; ");
+
+  const runFile: RunFile = {
     schemaVersion: 1,
     id: `${runDate}-${slug}`,
     label: options.label ?? `${chipLabel} (local)`,
@@ -107,7 +117,7 @@ export function convertToRun(result: RunnerResult, options: PublishOptions): Run
       memory: `${memoryGb} GB`,
       os: `${osName} ${osVersion}`,
       arch: env.architecture,
-      runtime: `Bun ${env.bun}`,
+      runtime,
     },
     protocol: {
       warmups: result.protocol.warmups,
@@ -125,8 +135,12 @@ export function convertToRun(result: RunnerResult, options: PublishOptions): Run
       statistics: c.statistics,
       samplesMs: c.samplesMs,
       ...CANDIDATE_BRANDING[c.id],
+      ...(c.outputBytes > 0 ? { metrics: { outputBytes: { value: c.outputBytes, unit: "bytes", label: "Output size" } } } : {}),
     })),
   };
+
+  if (nodeVersion) runFile.environment.node = nodeVersion;
+  return runFile;
 }
 
 export function updateBenchmarkRuns(benchmark: { runs: string[] }, runPath: string): void {
