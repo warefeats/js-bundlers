@@ -1,6 +1,6 @@
 # js-bundlers
 
-The reproducible local benchmark runner behind the [warefeats.com "Vite vs esbuild vs tsup" comparison](https://warefeats.com/benchmarks/vite-vs-esbuild-vs-tsup-library-build/).
+The reproducible local benchmark runner behind the [warefeats.com "Vite vs esbuild vs tsup" comparison](https://warefeats.com/posts/2026-08-30-js-bundlers-vite-vs-esbuild-vs-tsup/).
 
 It downloads zod's TypeScript source from a pinned GitHub tag (sha256-verified), then runs a cold production build with each bundler against the same corpus, collecting per-pass timing and summary statistics. Results live in this repo as `benchmark.json` (editorial metadata) plus one file per run under `runs/`.
 
