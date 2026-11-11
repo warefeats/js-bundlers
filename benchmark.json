@@ -8,6 +8,7 @@
   "deck": "Cold production builds of a TypeScript library — ESM, minified, no declarations.",
   "unit": "ms",
   "lowerIsBetter": true,
+  "sectionSamples": "repeats",
   "verdict": {
     "winnerId": "esbuild",
     "headline": "esbuild finished in 16 ms; Vite took 170 ms, tsup 204 ms",

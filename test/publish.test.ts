@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { convertToRun, rigSlug, updateBenchmarkRuns } from "../src/publish";
+import { checkFleetRun, convertToRun, fleetRun, lineupOf, rigSlug, updateBenchmarkRuns } from "../src/publish";
 import type { RunnerResult } from "../src/publish";
 
 const MOCK_RESULT: RunnerResult = {
@@ -184,5 +184,69 @@ describe("benchmark.json update", () => {
     updateBenchmarkRuns(benchmark, "runs/b.json");
     updateBenchmarkRuns(benchmark, "runs/b.json");
     expect(benchmark.runs).toEqual(["runs/a.json", "runs/b.json"]);
+  });
+});
+
+describe("fleet runs", () => {
+  const RIG = { machine: "BOSGAME P6 Neo", chip: "AMD Ryzen 7 6800H with Radeon Graphics", cores: "8 cores / 16 threads", memory: "24 GB at 4800 MT/s", os: "Microsoft Windows 11 Pro 26H2 (build 26300)", arch: "x64" };
+  const FLEET_RESULT: RunnerResult = {
+    ...MOCK_RESULT,
+    generatedAt: "2026-11-12T03:10:00.000Z",
+    smoke: false,
+    rig: RIG,
+    candidates: MOCK_RESULT.candidates.map((c) => ({ ...c, reportedVersion: c.version })),
+  };
+  // bun.lock's lines for the three candidates, trimmed, with the CRLF a Windows checkout can give it.
+  const LOCK = [
+    '    "esbuild": ["esbuild@0.28.2", "", { "bin": { "esbuild": "bin/esbuild" } }, "sha512-esbuildhash=="],',
+    '    "tsup": ["tsup@8.5.1", "", { "dependencies": { "esbuild": "^0.27.0" } }, "sha512-tsuphash=="],',
+    '    "tsup/esbuild": ["esbuild@0.27.7", "", {}, "sha512-nestedhash=="],',
+    '    "vite": ["vite@8.2.2", "", { "dependencies": { "rolldown": "~1.2.4" }, "peerDependencies": { "@vitejs/devtools": "^0.1.0", "esbuild": "^0.27.0 || ^0.28.0" } }, "sha512-vitehash=="],',
+  ].join("\r\n");
+  const COMMIT = "0123456789abcdef0123456789abcdef01234567";
+
+  test("is dated by the run and labelled with the rig", () => {
+    const run = fleetRun(FLEET_RESULT, { commit: COMMIT, rig: "radeon-680m-win11", machine: "BOSGAME EffiZen ARB19B mini PC", cpuShort: "Ryzen 7 6800H", osShort: "Windows 11", lock: LOCK });
+    expect(run.id).toBe("2026-11-12-radeon-680m-win11");
+    expect(run.label).toBe("Ryzen 7 6800H / Windows 11, 2026-11-12");
+    expect(run.publishedAt).toBe("2026-11-12");
+    expect(run.environment.machine).toBe("BOSGAME EffiZen ARB19B mini PC");
+    expect(run.environment.cores).toBe("8 cores / 16 threads");
+    expect(run.environment.os).toBe("Microsoft Windows 11 Pro 26H2 (build 26300)");
+    expect(run.provenance).toEqual({ kind: "fleet", commit: COMMIT, rig: "radeon-680m-win11" });
+  });
+
+  test("records each candidate's package as bun.lock pins it, not tsup's own esbuild", () => {
+    expect(lineupOf(FLEET_RESULT, LOCK)).toEqual([
+      { candidateId: "esbuild", package: "esbuild", version: "0.28.2", integrity: "sha512-esbuildhash==" },
+      { candidateId: "vite", package: "vite", version: "8.2.2", integrity: "sha512-vitehash==" },
+      { candidateId: "tsup", package: "tsup", version: "8.5.1", integrity: "sha512-tsuphash==" },
+    ]);
+  });
+
+  test("refuses a lockfile that pins another version than the run measured", () => {
+    expect(() => lineupOf(FLEET_RESULT, LOCK.replace("vite@8.2.2", "vite@8.3.6"))).toThrow("bun.lock pins 8.3.6 but the run measured 8.2.2");
+  });
+
+  test("marks a smoke run's id", () => {
+    const run = fleetRun({ ...FLEET_RESULT, smoke: true }, { commit: COMMIT, rig: "radeon-680m-win11", lock: LOCK });
+    expect(run.id).toBe("2026-11-12-radeon-680m-win11-smoke");
+  });
+
+  test("refuses smoke runs, bad commits, version mismatches and empty bundles", () => {
+    expect(() => checkFleetRun(FLEET_RESULT, { allowSmoke: false, commit: COMMIT })).not.toThrow();
+    expect(() => checkFleetRun({ ...FLEET_RESULT, smoke: true }, { allowSmoke: false, commit: COMMIT })).toThrow("can't be a smoke run");
+    expect(() => checkFleetRun({ ...FLEET_RESULT, smoke: true }, { allowSmoke: true, commit: COMMIT })).not.toThrow();
+    expect(() => checkFleetRun(FLEET_RESULT, { allowSmoke: false, commit: "main" })).toThrow("full SHA");
+    expect(() => checkFleetRun(MOCK_RESULT, { allowSmoke: false, commit: COMMIT })).toThrow("no rig probe");
+    const drifted = { ...FLEET_RESULT, candidates: FLEET_RESULT.candidates.map((c) => (c.id === "vite" ? { ...c, reportedVersion: "8.3.6" } : c)) };
+    expect(() => checkFleetRun(drifted, { allowSmoke: false, commit: COMMIT })).toThrow("vite reported 8.3.6 at run time but 8.2.2 was installed");
+    const empty = { ...FLEET_RESULT, candidates: FLEET_RESULT.candidates.map((c) => (c.id === "tsup" ? { ...c, outputBytes: 0 } : c)) };
+    expect(() => checkFleetRun(empty, { allowSmoke: false, commit: COMMIT })).toThrow("tsup wrote no bundle");
+  });
+
+  test("names the interleaved protocol", () => {
+    const run = convertToRun({ ...FLEET_RESULT, protocol: { ...FLEET_RESULT.protocol, processModel: "fresh process per pass, output directory cleared, candidates interleaved and rotated each pass" } }, {});
+    expect(run.protocol.processModel).toBe("A new CLI process for every measured pass, output directory cleared between passes, candidates interleaved and rotated each pass");
   });
 });

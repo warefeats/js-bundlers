@@ -11,3 +11,10 @@ jobs:
     uses: warefeats/workflows/.github/workflows/bun-verify.yml@main
     with:
       smoke-command: bun run smoke -- --output=/tmp/js-bundlers-smoke.json
+
+  # The fleet measures on Windows, where the CLIs start differently and paths read differently.
+  verify-windows:
+    uses: warefeats/workflows/.github/workflows/bun-verify.yml@main
+    with:
+      runs-on: windows-latest
+      smoke-command: bun run smoke -- --output=js-bundlers-smoke.json
