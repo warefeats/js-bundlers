@@ -102,10 +102,11 @@ const CANDIDATE_BRANDING: Record<string, { logo?: string; homepage: string; colo
   esbuild: { logo: "/logos/esbuild.svg", homepage: "https://esbuild.github.io", color: "#FFCF00" },
   vite: { logo: "/logos/vite.svg", homepage: "https://vite.dev", color: "#646CFF" },
   tsup: { homepage: "https://tsup.egoist.dev", color: "#EE6A00" },
+  "tsup-9": { homepage: "https://tsup.egoist.dev", color: "#F7A440" },
 };
 
 /** The package.json dependency each candidate is, which the fleet's plan matches against the lineup. */
-const CANDIDATE_PACKAGES: Record<string, string> = { esbuild: "esbuild", vite: "vite", tsup: "tsup" };
+const CANDIDATE_PACKAGES: Record<string, string> = { esbuild: "esbuild", vite: "vite", tsup: "tsup", "tsup-9": "tsup-9" };
 
 const PROCESS_MODELS: Record<string, string> = {
   "fresh process per pass, output directory cleared": "A new CLI process for every measured pass, output directory cleared between passes",

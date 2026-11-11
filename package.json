@@ -15,6 +15,7 @@
     "@types/bun": "1.4.0",
     "esbuild": "0.28.2",
     "tsup": "8.5.1",
+    "tsup-9": "npm:tsup@9.0.0",
     "typescript": "5.9.2",
     "vite": "8.2.2"
   }

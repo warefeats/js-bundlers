@@ -250,3 +250,25 @@ describe("fleet runs", () => {
     expect(run.protocol.processModel).toBe("A new CLI process for every measured pass, output directory cleared between passes, candidates interleaved and rotated each pass");
   });
 });
+
+describe("release lines", () => {
+  const withTsup9: RunnerResult = {
+    ...MOCK_RESULT,
+    candidates: [...MOCK_RESULT.candidates, { ...MOCK_RESULT.candidates[2]!, id: "tsup-9", name: "tsup 9", version: "9.0.0" }],
+  };
+
+  test("record an aliased line under the real package, which the fleet's plan matches", () => {
+    const lock = [
+      '    "esbuild": ["esbuild@0.28.2", "", { "bin": { "esbuild": "bin/esbuild" } }, "sha512-esbuildhash=="],',
+      '    "tsup": ["tsup@8.5.1", "", { "dependencies": { "esbuild": "^0.27.0" } }, "sha512-eight=="],',
+      '    "tsup-9": ["tsup@9.0.0", "", { "dependencies": { "bundle-require": "^5.1.0" } }, "sha512-nine=="],',
+      '    "vite": ["vite@8.2.2", "", { "peerDependencies": { "@vitejs/devtools": "^0.1.0" } }, "sha512-vitehash=="],',
+    ].join("\n");
+    expect(lineupOf(withTsup9, lock).find((entry) => entry.candidateId === "tsup-9")).toEqual({ candidateId: "tsup-9", package: "tsup", version: "9.0.0", integrity: "sha512-nine==" });
+  });
+
+  test("give the tsup 9 line its own color", () => {
+    const colors = convertToRun(withTsup9, {}).candidates.map((candidate) => candidate.color);
+    expect(new Set(colors).size).toBe(colors.length);
+  });
+});
