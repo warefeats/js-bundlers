@@ -101,6 +101,8 @@ Optional flags: `--machine="MacBook Pro"` (display name for the machine; default
 
 ## Fleet runs
 
+Each candidate is a release line: `esbuild` (0.28), `vite` (Vite 8), `tsup` (tsup 8, a closed line whose last release is 8.5.1) and `tsup-9` (tsup 9, an npm alias). Renovate moves a line to its newest stable release once that release is a week old and merges the bump when CI passes, esbuild by patches only since its 0.x minors break (`renovate.json`); a new major waits on the dependency dashboard and becomes a new alias by hand.
+
 The warefeats fleet measures `main` on its Windows rig when a run is dispatched or a candidate's pinned release changes, on the Node `.node-version` pins and with the archive staged from the rig's cache. It imports the results with `bun run src/publish.ts <results.json> --fleet --commit=<sha> --rig=<slug>`, which refuses a smoke run, a CLI that reported another version than the installed one, and a build that wrote nothing; records the commit, the rig and each candidate's integrity hash from `bun.lock`; and writes `runs/<date>-<rig>.json` without touching `benchmark.json`. The fleet's PR then lists the run in `fleetRuns`. Fleet runs appear on the site's matchup, never on the post, whose verdict was written from its own run on an M2 Max. `sectionSamples: "repeats"` says each sample is one fresh-process build of the whole corpus, so the fleet's verdict check reads a new leader inside twice the standard error of the difference as a tie.
 
 ## Type checking and tests

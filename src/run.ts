@@ -293,14 +293,33 @@ export async function runBundleBenchmark(options: RunnerOptions): Promise<Record
     const nodeVersion = detectNodeVersion();
     const esbuild = esbuildBinary(packageRoot);
     const vite = await binEntry(packageRoot, "vite", "vite");
-    const tsup = await binEntry(packageRoot, "tsup", "tsup");
     const entryName = (path: string) => path.slice(join(packageRoot, "node_modules").length + 1).replaceAll("\\", "/");
 
-    const [esbuildVersion, viteVersion, tsupVersion] = await Promise.all([
+    const [esbuildVersion, viteVersion] = await Promise.all([
       installedVersion(packageRoot, "esbuild"),
       installedVersion(packageRoot, "vite"),
-      installedVersion(packageRoot, "tsup"),
     ]);
+
+    // One candidate per tsup release line: the package.json dependency (an npm alias past the first), its name and its
+    // output folder. tsup 8 is a closed line: 8.5.1 is its last release.
+    const tsupLines: { id: "tsup" | "tsup-9"; name: string; outDir: string }[] = [
+      { id: "tsup", name: "tsup 8", outDir: "dist/tsup" },
+      { id: "tsup-9", name: "tsup 9", outDir: "dist/tsup-9" },
+    ];
+    const tsups: CandidateDefinition[] = [];
+    for (const line of tsupLines) {
+      const script = await binEntry(packageRoot, line.id, "tsup");
+      tsups.push({
+        id: line.id,
+        name: line.name,
+        version: await installedVersion(packageRoot, line.id),
+        reportedVersion: cliVersion(["node", script], scratch),
+        entry: `node ${entryName(script)}`,
+        command: ["node", script, "src/index.ts", "--format", "esm", "--target", "es2022", "--minify", "--outDir", line.outDir],
+        displayCommand: `tsup src/index.ts --format esm --target es2022 --minify --outDir ${line.outDir}`,
+        outputDir: line.outDir,
+      });
+    }
 
     const definitions: CandidateDefinition[] = [
       {
@@ -323,16 +342,7 @@ export async function runBundleBenchmark(options: RunnerOptions): Promise<Record
         displayCommand: "vite build (library mode via vite.config.js)",
         outputDir: "dist/vite",
       },
-      {
-        id: "tsup",
-        name: "tsup",
-        version: tsupVersion,
-        reportedVersion: cliVersion(["node", tsup], scratch),
-        entry: `node ${entryName(tsup)}`,
-        command: ["node", tsup, "src/index.ts", "--format", "esm", "--target", "es2022", "--minify", "--outDir", "dist/tsup"],
-        displayCommand: "tsup src/index.ts --format esm --target es2022 --minify --outDir dist/tsup",
-        outputDir: "dist/tsup",
-      },
+      ...tsups,
     ];
 
     const timings = runCandidates(definitions, scratch, options);

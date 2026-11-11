@@ -8,14 +8,14 @@
   "packageRules": [
     {
       "description": "Harness: everything that isn't a candidate, Node in .node-version included, in one PR a month, merged by hand. Each of these changes the rig.",
-      "matchDepNames": ["!esbuild", "!vite", "!tsup"],
+      "matchDepNames": ["!esbuild", "!vite", "!tsup", "!tsup-9"],
       "groupName": "harness",
       "schedule": ["* 0-3 1 * *"],
       "automerge": false
     },
     {
       "description": "Candidates: a release line moves to its newest stable release once that release is 7 days old, and the PR merges itself when CI passes. The fleet measures it at its next six-hourly check, lands the run, and updates the site.",
-      "matchDepNames": ["vite", "tsup"],
+      "matchDepNames": ["vite", "tsup", "tsup-9"],
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true
     },
@@ -26,8 +26,13 @@
       "automerge": true
     },
     {
-      "description": "A new major (and a new esbuild 0.x minor) is a new release line, added by hand. The dashboard lists it; approving it there would move the existing line instead, so don't.",
-      "matchDepNames": ["esbuild", "vite", "tsup"],
+      "description": "tsup 8 is a closed line: 8.5.1 was its last release, and it never leaves 8.x.",
+      "matchDepNames": ["tsup"],
+      "allowedVersions": "<9"
+    },
+    {
+      "description": "A new major (and a new esbuild 0.x minor) is a new release line, added by hand as a new alias. The dashboard lists it; approving it there would move the existing line instead, so don't.",
+      "matchDepNames": ["esbuild", "vite", "tsup-9"],
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
     },
