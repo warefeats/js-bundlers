@@ -34,6 +34,7 @@
     "runs/2026-08-30-m2max.json"
   ],
   "fleetRuns": [
+    "runs/2026-11-11-radeon-680m-win11-2.json",
     "runs/2026-11-11-radeon-680m-win11.json"
   ]
 }
