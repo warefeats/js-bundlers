@@ -1,6 +1,8 @@
 export interface RunnerOptions {
   runs: number;
   warmups: number;
+  /** --quick: the short protocol, which a fleet run refuses. */
+  smoke: boolean;
   output?: string;
 }
 
@@ -14,7 +16,7 @@ function positiveInteger(flag: string, value: string): number {
 }
 
 export function parseOptions(args: string[]): RunnerOptions {
-  const options: RunnerOptions = { runs: 20, warmups: 3 };
+  const options: RunnerOptions = { runs: 20, warmups: 3, smoke: false };
 
   for (const argument of args) {
     if (argument === "--") {
@@ -24,6 +26,7 @@ export function parseOptions(args: string[]): RunnerOptions {
     if (argument === "--quick") {
       options.runs = 3;
       options.warmups = 1;
+      options.smoke = true;
       continue;
     }
 

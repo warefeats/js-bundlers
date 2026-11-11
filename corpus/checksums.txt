@@ -1,0 +1,3 @@
+# checksums.txt: SHA-256 of the corpus archive, in `sha256sum` format ("<hex>  <path>", paths relative to corpus/).
+# The harness checks the archive against it before every run, and the fleet's cache script before copying it to a rig.
+3b843d6840988462fb89a8d714e286f2fc4f998a89c6468ec948c869ab417548  cache/zod-4.5.4.tar.gz

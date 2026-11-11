@@ -3,15 +3,15 @@ import { parseOptions } from "../src/options";
 
 describe("runner options", () => {
   test("uses publication defaults", () => {
-    expect(parseOptions([])).toEqual({ runs: 20, warmups: 3 });
+    expect(parseOptions([])).toEqual({ runs: 20, warmups: 3, smoke: false });
   });
 
   test("supports a CI smoke mode", () => {
-    expect(parseOptions(["--quick"])).toEqual({ runs: 3, warmups: 1 });
+    expect(parseOptions(["--quick"])).toEqual({ runs: 3, warmups: 1, smoke: true });
   });
 
   test("accepts explicit counts and output", () => {
-    expect(parseOptions(["--runs=8", "--warmups=2", "--output=result.json"])).toEqual({ runs: 8, warmups: 2, output: "result.json" });
+    expect(parseOptions(["--runs=8", "--warmups=2", "--output=result.json"])).toEqual({ runs: 8, warmups: 2, smoke: false, output: "result.json" });
   });
 
   test("rejects unknown options", () => {
